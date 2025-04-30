@@ -193,7 +193,7 @@ if not monthly_data.empty:
 else:
     st.warning("No data available for monthly trends")
         # Expense breakdown
-        st.subheader("Expense Breakdown")
+    st.subheader("Expense Breakdown")
         expense_data = transactions[transactions['type'] == 'Expense']
         if not expense_data.empty:
             col1, col2 = st.columns(2)
