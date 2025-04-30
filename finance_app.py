@@ -7,8 +7,8 @@ import sqlite3
 import calendar
 from dateutil.relativedelta import relativedelta
 import os
-# Add at the top of your file
 import traceback
+
 # Constants
 DATABASE_FILE = 'finance.db'
 DEFAULT_CATEGORIES = {
@@ -169,31 +169,34 @@ if page == "Dashboard":
         col3.metric("Balance", f"${balance:,.2f}", delta_color="inverse")
         
         # Monthly trends
-        # Replace the existing monthly trends code with this:
-st.subheader("Monthly Trends")
-if not monthly_data.empty:
-    try:
-        # Reset index for Plotly
-        plot_data = monthly_data.reset_index()
-        plot_data = plot_data.melt(id_vars=['month'], 
-                                 value_vars=['Income', 'Expense', 'Balance'],
-                                 var_name='Type',
-                                 value_name='Amount')
+        st.subheader("Monthly Trends")
+        monthly_data = transactions.groupby(['month', 'type'])['amount'].sum().unstack().fillna(0)
+        monthly_data['Balance'] = monthly_data.get('Income', 0) - monthly_data.get('Expense', 0)
         
-        fig = px.line(plot_data,
-                     x='month',
-                     y='Amount',
-                     color='Type',
-                     markers=True,
-                     title="Monthly Income vs Expenses")
-        st.plotly_chart(fig, use_container_width=True)
-    except Exception as e:
-        st.error(f"Could not generate chart: {str(e)}")
-        st.write("Debug Data:", monthly_data)
-else:
-    st.warning("No data available for monthly trends")
+        if not monthly_data.empty:
+            try:
+                # Reset index for Plotly
+                plot_data = monthly_data.reset_index()
+                plot_data = plot_data.melt(id_vars=['month'], 
+                                         value_vars=['Income', 'Expense', 'Balance'],
+                                         var_name='Type',
+                                         value_name='Amount')
+                
+                fig = px.line(plot_data,
+                             x='month',
+                             y='Amount',
+                             color='Type',
+                             markers=True,
+                             title="Monthly Income vs Expenses")
+                st.plotly_chart(fig, use_container_width=True)
+            except Exception as e:
+                st.error(f"Could not generate chart: {str(e)}")
+                st.write("Debug Data:", monthly_data)
+        else:
+            st.warning("No data available for monthly trends")
+        
         # Expense breakdown
-    st.subheader("Expense Breakdown")
+        st.subheader("Expense Breakdown")
         expense_data = transactions[transactions['type'] == 'Expense']
         if not expense_data.empty:
             col1, col2 = st.columns(2)
@@ -365,9 +368,8 @@ elif page == "Reports":
     selected_month = st.selectbox("Select Month for Report", months, index=len(months)-1)
     
     # Get data for the selected month
-    # In the Reports section (around line 356):
     first_day = datetime.strptime(selected_month, '%Y-%m').date()
-    last_day = (first_day + relativedelta(months=1)) - timedelta(days=1)  # Fixed line
+    last_day = (first_day + relativedelta(months=1)) - timedelta(days=1)
     
     transactions = get_transactions(first_day.strftime('%Y-%m-%d'), 
                                   last_day.strftime('%Y-%m-%d'))
