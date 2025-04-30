@@ -1,7 +1,7 @@
 # AF3005 – Programming for Finance Project
 **Instructor:** Dr. Usama Arshad  
-**Student:** [Your Name]  
-**ID:** [Your Student ID]
+**Student:** Abdul Hadi Cheema  
+**ID:** 22I-2279
 
 ## 💰 Personal Finance Tracker
 A Streamlit web app for tracking income/expenses with:
