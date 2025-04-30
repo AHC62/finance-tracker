@@ -7,7 +7,8 @@ import sqlite3
 import calendar
 from dateutil.relativedelta import relativedelta
 import os
-
+# Add at the top of your file
+import traceback
 # Constants
 DATABASE_FILE = 'finance.db'
 DEFAULT_CATEGORIES = {
@@ -168,17 +169,29 @@ if page == "Dashboard":
         col3.metric("Balance", f"${balance:,.2f}", delta_color="inverse")
         
         # Monthly trends
-        st.subheader("Monthly Trends")
-        monthly_data = transactions.groupby(['month', 'type'])['amount'].sum().unstack().fillna(0)
-        monthly_data['Balance'] = monthly_data.get('Income', 0) - monthly_data.get('Expense', 0)
+        # Replace the existing monthly trends code with this:
+st.subheader("Monthly Trends")
+if not monthly_data.empty:
+    try:
+        # Reset index for Plotly
+        plot_data = monthly_data.reset_index()
+        plot_data = plot_data.melt(id_vars=['month'], 
+                                 value_vars=['Income', 'Expense', 'Balance'],
+                                 var_name='Type',
+                                 value_name='Amount')
         
-        fig = px.line(monthly_data, 
-                     x=monthly_data.index, 
-                     y=['Income', 'Expense', 'Balance'],
+        fig = px.line(plot_data,
+                     x='month',
+                     y='Amount',
+                     color='Type',
                      markers=True,
                      title="Monthly Income vs Expenses")
         st.plotly_chart(fig, use_container_width=True)
-        
+    except Exception as e:
+        st.error(f"Could not generate chart: {str(e)}")
+        st.write("Debug Data:", monthly_data)
+else:
+    st.warning("No data available for monthly trends")
         # Expense breakdown
         st.subheader("Expense Breakdown")
         expense_data = transactions[transactions['type'] == 'Expense']
